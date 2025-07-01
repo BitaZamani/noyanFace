@@ -1,103 +1,212 @@
-import Image from "next/image";
+"use client";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-export default function Home() {
+type faceType = {
+  emoji: string | null;
+  locked: boolean;
+};
+
+export default function Face() {
+  const [disabled, setDisabled] = useState(false);
+  const [resetActive, setResetActive] = useState(false);
+  const [lockState, setLockState] = useState(false);
+  const [randEye, setRandEye] = useState<faceType>({
+    emoji: null,
+    locked: false,
+  });
+  const [randNose, setRandNose] = useState<faceType>({
+    emoji: null,
+    locked: false,
+  });
+  const [randMouth, setRandMouth] = useState<faceType>({
+    emoji: null,
+    locked: false,
+  });
+  const svgs = {
+    lock: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width={20}
+        height={20}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={`${
+          lockState
+            ? "text-black cursor-pointer"
+            : "text-gray-700/30 cursor-not-allowed"
+        }`}
+      >
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z" />
+        <path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" />
+        <path d="M8 11v-4a4 4 0 1 1 8 0v4" />
+      </svg>
+    ),
+    unLock: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width={20}
+        height={20}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={`${
+          lockState
+            ? "text-black cursor-pointer"
+            : "text-gray-700/30 cursor-not-allowed"
+        }`}
+      >
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M3 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2z" />
+        <path d="M9 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" />
+        <path d="M13 11v-4a4 4 0 1 1 8 0v4" />
+      </svg>
+    ),
+  };
+  const selectableEmojies = {
+    eyes: ["👀", "😎", "🤓", "🧐", "👁️"],
+    nose: ["👃", "🐽", "👃🏻", "👃🏽", "🤥"],
+    mouth: ["👄", "😁", "😬", "😗", "😛"],
+  };
+
+  const router = useRouter();
+  const url = new URLSearchParams();
+
+  useEffect(() => {
+    const param = new URLSearchParams(window.location.search);
+    setRandEye({ emoji: param.get("eyes"), locked: false });
+    setRandNose({ emoji: param.get("nose"), locked: false });
+    setRandMouth({ emoji: param.get("mouth"), locked: false });
+  }, []);
+
+  useEffect(() => {
+    if (randEye.locked && randNose.locked && randMouth.locked)
+      setDisabled(true);
+    else setDisabled(false);
+  }, [randEye.locked, randNose.locked, randMouth.locked]);
+
+  const getRandEmoji = (emojies: string[]) => {
+    return emojies[Math.floor(Math.random() * emojies.length)];
+  };
+
+  const getEmojies = () => {
+    if (!randEye.locked) {
+      const randEye = getRandEmoji(selectableEmojies.eyes);
+      setRandEye({
+        locked: false,
+        emoji: randEye,
+      });
+      url.append("eyes", randEye);
+    } else {
+      url.append("eyes", randEye.emoji!);
+    }
+    if (!randNose.locked) {
+      const randNose = getRandEmoji(selectableEmojies.nose);
+      setRandNose({
+        locked: false,
+        emoji: randNose,
+      });
+      url.append("nose", randNose);
+    } else {
+      url.append("nose", randNose.emoji!);
+    }
+    if (!randMouth.locked) {
+      const randMouth = getRandEmoji(selectableEmojies.mouth);
+      setRandMouth({
+        locked: false,
+        emoji: randMouth,
+      });
+      url.append("mouth", randMouth);
+    } else {
+      url.append("mouth", randMouth.emoji!);
+    }
+    router.push(`/?${url}`);
+    setLockState(true);
+    setResetActive(true);
+  };
+
+  const reset = () => {
+    if (resetActive) {
+      setRandEye({ emoji: null, locked: false });
+      setRandNose({ emoji: null, locked: false });
+      setRandMouth({ emoji: null, locked: false });
+      setDisabled(false);
+      setLockState(false);
+      setResetActive(false);
+      router.push("/");
+    }
+  };
+
+  const lock = (
+    setRandEmoji: React.Dispatch<React.SetStateAction<faceType>>,
+    randEmoji: faceType
+  ) => {
+    if (randEmoji.emoji) {
+      setRandEmoji({
+        ...randEmoji,
+        locked: !randEmoji.locked,
+      });
+    }
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="flex h-screen justify-center items-center flex-col bg-yellow-100">
+      <div className="bg-yellow-400/35 rounded-md w-5/6 h-72 max-w-[450px] flex justify-between items-center flex-col drop-shadow-yellow-200 drop-shadow-xl relative">
+        <span className="font-bold text-xl text-black text-shadow-2xs text-shadow-yellow-500 my-2">
+          Create a funny face.
+        </span>
+        <div className="border rounded-full size-32 flex justify-center items-center flex-col gap-5">
+          <div className="space-x-3.5">
+            <span>{randEye.emoji}</span>
+            <span>{randEye.emoji}</span>
+          </div>
+          <div>{randNose.emoji}</div>
+          <div>{randMouth.emoji}</div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <div className="absolute left-2 translate-y-1/2 bottom-1/2 space-x-0.5">
+          <span onClick={() => lock(setRandEye, randEye)}>
+            {randEye.locked ? svgs.lock : svgs.unLock}
+          </span>
+          <span onClick={() => lock(setRandNose, randNose)}>
+            {randNose.locked ? svgs.lock : svgs.unLock}
+          </span>
+          <span onClick={() => lock(setRandMouth, randMouth)}>
+            {randMouth.locked ? svgs.lock : svgs.unLock}
+          </span>
+        </div>
+        <div className="space-x-10 my-2">
+          <button
+            disabled={disabled}
+            onClick={getEmojies}
+            className={`border  bg-amber-100 py-0.5 px-2 rounded-md  ${
+              !disabled
+                ? "border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-amber-100 hover:border-amber-100 cursor-pointer"
+                : "bg-gray-100 border-gray-400 text-gray-400 cursor-not-allowed"
+            }`}
+          >
+            Create
+          </button>
+          <button
+            onClick={reset}
+            disabled={!resetActive}
+            className={`border  bg-amber-100 py-0.5 px-2 rounded-md  ${
+              resetActive
+                ? "border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-amber-100 hover:border-amber-100 cursor-pointer"
+                : "bg-gray-100 border-gray-400 text-gray-400 cursor-not-allowed"
+            }`}
+          >
+            Reset
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
